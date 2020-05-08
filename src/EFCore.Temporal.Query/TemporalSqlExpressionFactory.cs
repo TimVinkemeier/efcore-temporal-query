@@ -1,15 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Reflection;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using System;
-using System.Reflection;
 
 namespace EntityFrameworkCore.TemporalTables.Query
 {
-    public class AsOfSqlExpressionFactory : SqlExpressionFactory
+    public class TemporalSqlExpressionFactory : SqlExpressionFactory
     {
-        public AsOfSqlExpressionFactory(SqlExpressionFactoryDependencies dependencies) : base(dependencies)
+        public TemporalSqlExpressionFactory(SqlExpressionFactoryDependencies dependencies) : base(dependencies)
         {
         }
 
@@ -17,13 +18,13 @@ namespace EntityFrameworkCore.TemporalTables.Query
         {
             if (entityType.FindAnnotation(SqlServerEntityTypeBuilderExtensions.ANNOTATION_TEMPORAL) != null)
             {
-                var asOfTableExpression = new AsOfTableExpression(
+                var temporalTableExpression = new TemporalTableExpression(
                     entityType.GetTableName(),
                     entityType.GetSchema(),
                     entityType.GetTableName().ToLower().Substring(0, 1));
 
-                var selectContructor = typeof(SelectExpression).GetConstructor(BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance, null, new Type[] { typeof(IEntityType), typeof(TableExpressionBase) }, null);
-                var select = (SelectExpression)selectContructor.Invoke(new object[] { entityType, asOfTableExpression });
+                var selectContructor = typeof(SelectExpression).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(IEntityType), typeof(TableExpressionBase) }, null);
+                var select = (SelectExpression)selectContructor.Invoke(new object[] { entityType, temporalTableExpression });
 
                 var privateInitializer = typeof(SqlExpressionFactory).GetMethod("AddConditions", BindingFlags.NonPublic | BindingFlags.Instance);
                 privateInitializer.Invoke(this, new object[] { select, entityType, null, null });
@@ -33,6 +34,5 @@ namespace EntityFrameworkCore.TemporalTables.Query
 
             return base.Select(entityType);
         }
-
     }
 }

@@ -1,17 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore.Query;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.SqlServer.Infrastructure.Internal;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EntityFrameworkCore.TemporalTables.Query
 {
-    public class AsOfQuerySqlGeneratorFactory : IQuerySqlGeneratorFactory
+    public class TemporalQuerySqlGeneratorFactory : IQuerySqlGeneratorFactory
     {
-        private readonly IQueryableMethodTranslatingExpressionVisitorFactory _ss;
         private readonly QuerySqlGeneratorDependencies _dependencies;
-        private readonly ISqlServerOptions _sqlServerOptions;
         private readonly QueryCompilationContext _queryCompilationContext;
+        private readonly ISqlServerOptions _sqlServerOptions;
+        private readonly IQueryableMethodTranslatingExpressionVisitorFactory _ss;
 
-        public AsOfQuerySqlGeneratorFactory(
+        public TemporalQuerySqlGeneratorFactory(
             [NotNull] QuerySqlGeneratorDependencies dependencies,
             [NotNull] ISqlServerOptions sqlServerOptions)
         {
@@ -21,8 +22,7 @@ namespace EntityFrameworkCore.TemporalTables.Query
 
         public QuerySqlGenerator Create()
         {
-            return new AsOfQuerySqlGenerator(_dependencies, null, null);
+            return new TemporalQuerySqlGenerator(_dependencies, null, null);
         }
     }
-
 }

@@ -1,8 +1,10 @@
-﻿using EntityFrameworkCore.TemporalTables.Query;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using EntityFrameworkCore.TemporalTables.Query;
+
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Query;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.EntityFrameworkCore
 {
@@ -10,13 +12,7 @@ namespace Microsoft.EntityFrameworkCore
     {
         public static string ANNOTATION_TEMPORAL = "IS_TEMPORAL_TABLE";
 
-        public static EntityTypeBuilder<TEntity> HasTemporalTable<TEntity>(this EntityTypeBuilder<TEntity> entity) where TEntity : class
-        {
-            entity.Metadata.SetAnnotation(ANNOTATION_TEMPORAL, true);
-            return entity;
-        }
-
-        public static DbContextOptionsBuilder<TContext> EnableTemporalTableQueries<TContext>([NotNull] this DbContextOptionsBuilder<TContext> optionsBuilder) where TContext : DbContext
+        public static DbContextOptionsBuilder EnableTemporalTableQueries([NotNull] this DbContextOptionsBuilder optionsBuilder)
         {
             // If service provision is NOT being performed internally, we cannot replace services.
             var coreOptions = optionsBuilder.Options.GetExtension<CoreOptionsExtension>();
@@ -24,14 +20,24 @@ namespace Microsoft.EntityFrameworkCore
             {
                 return optionsBuilder
                     // replace the service responsible for generating SQL strings
-                    .ReplaceService<IQuerySqlGeneratorFactory, AsOfQuerySqlGeneratorFactory>()
+                    .ReplaceService<IQuerySqlGeneratorFactory, TemporalQuerySqlGeneratorFactory>()
                     // replace the service responsible for traversing the Linq AST (a.k.a Query Methods)
-                    .ReplaceService<IQueryableMethodTranslatingExpressionVisitorFactory, AsOfQueryableMethodTranslatingExpressionVisitorFactory>()
+                    .ReplaceService<IQueryableMethodTranslatingExpressionVisitorFactory, TemporalQueryableMethodTranslatingExpressionVisitorFactory>()
                     // replace the service responsible for providing instances of SqlExpressions
-                    .ReplaceService<ISqlExpressionFactory, AsOfSqlExpressionFactory>();
+                    .ReplaceService<ISqlExpressionFactory, TemporalSqlExpressionFactory>();
             }
-            else 
+            else
                 return optionsBuilder;
+        }
+
+        /// <summary>
+        /// Sets the required metadata to track that this entity type uses a temporal table.
+        /// </summary>
+        /// <param name="entity"></param>
+        public static EntityTypeBuilder HasTemporalTable(this EntityTypeBuilder entity)
+        {
+            entity.Metadata.SetAnnotation(ANNOTATION_TEMPORAL, true);
+            return entity;
         }
     }
 }

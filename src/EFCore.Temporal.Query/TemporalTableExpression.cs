@@ -1,29 +1,39 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Linq.Expressions;
+
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using System;
-using System.Linq.Expressions;
 
 namespace EntityFrameworkCore.TemporalTables.Query
 {
     /// <summary>
     /// A derived implementation of TableExpressionBase which allows us to attach some meta-data to
-    /// the TableExpressionBase - namely the "AsOfDate" property.
+    /// the TableExpressionBase - namely the "AsOfDate" and "TemporalExpressionType" properties.
     /// </summary>
-    public class AsOfTableExpression : TableExpressionBase
+    public class TemporalTableExpression : TableExpressionBase
     {
-        public string Name { get; }
-        public string Schema { get; }
+        public TemporalTableExpression(string name, string schema, string alias) : base(alias)
+        {
+            Name = name;
+            Schema = schema;
+        }
+
         /// <summary>
         /// Gets and sets the parameter used to constrain a query to a specific temporal period.
         /// </summary>
         public ParameterExpression AsOfDate { get; set; }
 
-        public AsOfTableExpression(string name, string schema, string alias) : base(alias)
-        {
-            Name = name;
-            Schema = schema;
-        }
+        public string Name { get; }
+
+        public string Schema { get; }
+
+        public TemporalExpressionType TemporalExpressionType { get; set; }
+
+        public override bool Equals(object obj)
+             // This should be reference equal only.
+             => obj != null && ReferenceEquals(this, obj);
+
+        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), Name, Schema);
 
         public override void Print(ExpressionPrinter expressionPrinter)
         {
@@ -34,11 +44,5 @@ namespace EntityFrameworkCore.TemporalTables.Query
 
             expressionPrinter.Append(Name).Append(" AS ").Append(Alias);
         }
-
-        public override bool Equals(object obj)
-             // This should be reference equal only.
-             => obj != null && ReferenceEquals(this, obj);
-
-        public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), Name, Schema);
     }
 }
